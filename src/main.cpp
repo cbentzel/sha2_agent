@@ -17,8 +17,7 @@ void printUsage(const char* programName) {
     for (const auto& algo : algorithms) {
         std::cout << "  " << algo << "\n";
     }
-    std::cout << "  SHA128 (alias for SHA1)\n\n";
-    std::cout << "Examples:\n";
+    std::cout << "\nExamples:\n";
     std::cout << "  echo -n 'hello world' | " << programName << " --algorithm=sha256\n";
     std::cout << "  " << programName << " -a md5 < file.txt\n";
 }
@@ -28,7 +27,6 @@ void printSupportedAlgorithms() {
     for (const auto& algo : algorithms) {
         std::cout << algo << "\n";
     }
-    std::cout << "SHA128\n"; // Special alias
 }
 
 int main(int argc, char* argv[]) {

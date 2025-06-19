@@ -10,8 +10,7 @@ std::unique_ptr<HashInterface> HashFactory::createHash(const std::string& algori
     
     if (algo == "md5") {
         return std::make_unique<MD5>();
-    } else if (algo == "sha1" || algo == "sha128") {
-        // Note: SHA-128 isn't a standard algorithm, using SHA-1 instead
+    } else if (algo == "sha1") {
         return std::make_unique<SHA1>();
     } else if (algo == "sha256") {
         return std::make_unique<SHA256>();
@@ -50,8 +49,7 @@ bool HashFactory::isSupported(const std::string& algorithm) {
         }
     }
     
-    // Special case for SHA128 -> SHA1
-    return algo == "sha128";
+    return false;
 }
 
 std::string HashFactory::toLowerCase(const std::string& str) {

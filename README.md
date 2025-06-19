@@ -22,7 +22,6 @@ This utility implements multiple cryptographic hash functions with a unified int
 | MD5       | 128 bits (32 hex chars) | RFC 1321 | MD5 Message-Digest Algorithm |
 | SHA1      | 160 bits (40 hex chars) | FIPS 180-4 | Secure Hash Algorithm 1 |
 | SHA256    | 256 bits (64 hex chars) | FIPS 180-4 | Secure Hash Algorithm 256 |
-| SHA128    | 160 bits (40 hex chars) | - | Alias for SHA-1 |
 
 ## Building
 
