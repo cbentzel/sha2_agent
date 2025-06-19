@@ -1,0 +1,27 @@
+# Build artifacts
+build/
+sha256sum
+*.o
+*.a
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CMake files (if built in source)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+Testing/
+
+# Test output
+*.xml

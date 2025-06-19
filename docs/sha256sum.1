@@ -1,0 +1,127 @@
+.TH SHA256SUM 1 "June 2025" "sha256sum 1.0" "User Commands"
+.SH NAME
+sha256sum \- calculate SHA256 cryptographic hash
+.SH SYNOPSIS
+.B sha256sum
+.SH DESCRIPTION
+.B sha256sum
+calculates the SHA256 cryptographic hash of data read from standard input and outputs the result to standard output.
+
+The SHA256 algorithm is a cryptographic hash function that produces a 256-bit (32-byte) hash value, typically rendered as a hexadecimal string of 64 characters.
+
+.SH ALGORITHM
+This implementation follows the SHA-256 specification from FIPS Publication 180-4. The algorithm processes input data in 512-bit blocks and produces a fixed-size 256-bit hash regardless of input size.
+
+.SH FEATURES
+.TP
+.B Stream Processing
+Efficiently processes large files using a 32KB internal buffer, allowing unlimited input size with constant memory usage.
+.TP
+.B Memory Efficient
+Uses minimal memory (less than 50KB) regardless of input size.
+.TP
+.B Standard Compliance
+Implements SHA-256 according to FIPS 180-4 specification.
+
+.SH EXAMPLES
+.TP
+Calculate hash of a file:
+.B sha256sum < file.txt
+
+.TP
+Calculate hash of a string:
+.B echo -n "hello world" | sha256sum
+
+.TP
+Calculate hash of command output:
+.B ls -la | sha256sum
+
+.TP
+Calculate hash of empty input:
+.B echo -n "" | sha256sum
+.br
+Output: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+.TP
+Calculate hash of "abc":
+.B echo -n "abc" | sha256sum
+.br
+Output: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+
+.SH OUTPUT FORMAT
+The output is a single line containing the 64-character hexadecimal representation of the SHA256 hash, followed by a newline.
+
+.SH PERFORMANCE
+.TP
+.B Throughput
+Typically processes 100-500 MB/s depending on hardware.
+.TP
+.B Memory Usage
+Constant O(1) memory usage regardless of input size.
+.TP
+.B Scalability
+Can process arbitrarily large files without loading them into memory.
+
+.SH TECHNICAL DETAILS
+.TP
+.B Algorithm
+SHA-256 as specified in FIPS 180-4
+.TP
+.B Block Size
+512 bits (64 bytes)
+.TP
+.B Output Size
+256 bits (32 bytes, 64 hex characters)
+.TP
+.B Buffer Size
+32KB internal streaming buffer
+
+.SH EXIT STATUS
+.B sha256sum
+exits with status 0 on success.
+
+.SH STANDARDS
+This implementation conforms to:
+.TP
+.B FIPS 180-4
+Secure Hash Standard (SHS)
+.TP
+.B RFC 6234
+US Secure Hash Algorithms
+
+.SH VERIFICATION
+The implementation includes test vectors from FIPS 180-4:
+.TP
+Empty string:
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+.TP
+"abc":
+ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+.TP
+Test string "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq":
+248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+
+.SH COMPATIBILITY
+Compatible with other SHA256 implementations such as:
+.TP
+.B shasum -a 256
+(if available on system)
+.TP
+.B openssl dgst -sha256
+.TP
+.B sha256sum
+(GNU coreutils, where available)
+
+.SH BUGS
+Report bugs to the project maintainer.
+
+.SH SEE ALSO
+.BR openssl (1),
+.BR shasum (1),
+.BR md5sum (1)
+
+.SH AUTHOR
+Created as a portable, dependency-free SHA256 implementation.
+
+.SH COPYRIGHT
+This implementation is provided as-is for educational and practical use.
