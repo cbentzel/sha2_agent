@@ -17,6 +17,7 @@ add_executable(hashgen
     src/main.cpp
     src/stream_processor.cpp
     src/sha256.cpp
+    src/sha512.cpp
     src/sha1.cpp
     src/md5.cpp
     src/hash_factory.cpp
@@ -26,6 +27,7 @@ add_executable(hashgen
 add_library(hash_lib STATIC
     src/stream_processor.cpp
     src/sha256.cpp
+    src/sha512.cpp
     src/sha1.cpp
     src/md5.cpp
     src/hash_factory.cpp
@@ -83,11 +85,23 @@ if(GTest_FOUND)
         GTest::Main
     )
     
+    # SHA512 specific tests
+    add_executable(sha512_tests
+        tests/test_sha512.cpp
+    )
+    
+    target_link_libraries(sha512_tests
+        hash_lib
+        GTest::GTest
+        GTest::Main
+    )
+    
     # Add tests to CTest
     add_test(NAME HashTests COMMAND hash_tests)
     add_test(NAME MD5Tests COMMAND md5_tests)
     add_test(NAME SHA1Tests COMMAND sha1_tests)
     add_test(NAME SHA256Tests COMMAND sha256_tests)
+    add_test(NAME SHA512Tests COMMAND sha512_tests)
     
     # Enable verbose test output
     set_property(TEST HashTests PROPERTY ENVIRONMENT "GTEST_OUTPUT=xml")

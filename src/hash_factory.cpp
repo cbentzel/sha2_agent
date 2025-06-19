@@ -1,6 +1,7 @@
 #include "hash_factory.h"
 #include "sha1.h"
 #include "sha256.h"
+#include "sha512.h"
 #include "md5.h"
 #include <stdexcept>
 #include <algorithm>
@@ -15,14 +16,13 @@ std::unique_ptr<HashInterface> HashFactory::createHash(const std::string& algori
     } else if (algo == "sha256") {
         return std::make_unique<SHA256>();
     } else if (algo == "sha512") {
-        // TODO: Implement SHA512
-        throw std::invalid_argument("SHA512 not yet implemented");
+        return std::make_unique<SHA512>();
     } else if (algo == "blake256") {
-        // TODO: Implement BLAKE256
-        throw std::invalid_argument("BLAKE256 not yet implemented");
+        // BLAKE256 is not implemented - complex algorithm requiring significant development
+        throw std::invalid_argument("BLAKE256 not implemented - consider using SHA256 instead");
     } else if (algo == "blake512") {
-        // TODO: Implement BLAKE512
-        throw std::invalid_argument("BLAKE512 not yet implemented");
+        // BLAKE512 is not implemented - complex algorithm requiring significant development  
+        throw std::invalid_argument("BLAKE512 not implemented - consider using SHA512 instead");
     } else {
         throw std::invalid_argument("Unsupported hash algorithm: " + algorithm);
     }
@@ -32,10 +32,11 @@ std::vector<std::string> HashFactory::getSupportedAlgorithms() {
     return {
         "MD5",
         "SHA1",
-        "SHA256"
-        // "SHA512",     // TODO: Implement
-        // "BLAKE256",   // TODO: Implement  
-        // "BLAKE512"    // TODO: Implement
+        "SHA256",
+        "SHA512"
+        // Note: BLAKE256 and BLAKE512 are not implemented
+        // These are complex algorithms that would require substantial development effort
+        // For most use cases, SHA256/SHA512 provide equivalent or better security
     };
 }
 

@@ -13,7 +13,7 @@
  */
 class HashBase : public HashInterface {
 protected:
-    uint8_t buffer[64];          // Common buffer size for MD5, SHA-1, SHA-256
+    uint8_t buffer[128];         // Buffer large enough for SHA512 (128 bytes), smaller algorithms use less
     size_t bufferLength;
     uint64_t totalLength;
     bool finalized;
