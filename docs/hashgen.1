@@ -1,0 +1,132 @@
+.TH HASHGEN 1 "June 2025" "hashgen 1.0" "User Commands"
+.SH NAME
+hashgen \- calculate cryptographic hashes using various algorithms
+.SH SYNOPSIS
+.B hashgen
+.B --algorithm=
+.I ALGORITHM
+.br
+.B hashgen
+.B -a
+.I ALGORITHM
+.SH DESCRIPTION
+.B hashgen
+calculates cryptographic hashes of data read from standard input using the specified algorithm and outputs the result to standard output.
+
+The program supports multiple hash algorithms including MD5, SHA-1, and SHA-256, with a unified interface for all algorithms.
+
+.SH OPTIONS
+.TP
+.B --algorithm=\fIALGORITHM\fP
+Specify the hash algorithm to use. Required parameter.
+.TP
+.B -a \fIALGORITHM\fP
+Short form of --algorithm.
+.TP
+.B --help, -h
+Display help message and exit.
+.TP
+.B --list
+List all supported algorithms and exit.
+
+.SH SUPPORTED ALGORITHMS
+.TP
+.B MD5
+128-bit MD5 hash algorithm (RFC 1321)
+.TP
+.B SHA1
+160-bit SHA-1 hash algorithm (FIPS 180-4)
+.TP
+.B SHA128
+Alias for SHA-1 (160-bit output)
+.TP
+.B SHA256
+256-bit SHA-256 hash algorithm (FIPS 180-4)
+
+.SH FEATURES
+.TP
+.B Stream Processing
+Efficiently processes large files using a 32KB internal buffer, allowing unlimited input size with constant memory usage.
+.TP
+.B Memory Efficient
+Uses minimal memory (less than 50KB) regardless of input size.
+.TP
+.B Standard Compliance
+Implements algorithms according to their respective specifications (FIPS 180-4, RFC 1321).
+.TP
+.B Security Hardened
+Includes bounds checking, overflow protection, and secure memory handling.
+
+.SH EXAMPLES
+.TP
+Calculate SHA256 hash of a file:
+.B hashgen --algorithm=sha256 < file.txt
+
+.TP
+Calculate MD5 hash of a string:
+.B echo -n "hello world" | hashgen -a md5
+
+.TP
+Calculate SHA-1 hash of command output:
+.B ls -la | hashgen --algorithm=sha1
+
+.TP
+List supported algorithms:
+.B hashgen --list
+
+.TP
+Get help:
+.B hashgen --help
+
+.SH OUTPUT FORMAT
+The output is a single line containing the hexadecimal representation of the hash, followed by a newline. Hash length depends on the algorithm:
+.TP
+MD5: 32 hex characters (128 bits)
+.TP
+SHA-1: 40 hex characters (160 bits)
+.TP
+SHA-256: 64 hex characters (256 bits)
+
+.SH PERFORMANCE
+.TP
+.B Throughput
+Typically processes 100-500 MB/s depending on hardware and algorithm.
+.TP
+.B Memory Usage
+Constant O(1) memory usage regardless of input size.
+.TP
+.B Scalability
+Can process arbitrarily large files without loading them into memory.
+
+.SH EXIT STATUS
+.B hashgen
+exits with status 0 on success, 1 on error.
+
+.SH STANDARDS
+This implementation conforms to:
+.TP
+.B FIPS 180-4
+Secure Hash Standard (SHA-1, SHA-256)
+.TP
+.B RFC 1321
+The MD5 Message-Digest Algorithm
+
+.SH VERIFICATION
+The implementation includes test vectors from official specifications to ensure correctness.
+
+.SH COMPATIBILITY
+Output format is compatible with other standard hash tools when using the same algorithm.
+
+.SH BUGS
+Report bugs to the project maintainer.
+
+.SH SEE ALSO
+.BR openssl (1),
+.BR shasum (1),
+.BR md5sum (1)
+
+.SH AUTHOR
+Generic hash calculator with multiple algorithm support.
+
+.SH COPYRIGHT
+This implementation is provided as-is for educational and practical use.

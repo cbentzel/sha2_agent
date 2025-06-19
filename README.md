@@ -1,17 +1,28 @@
-# SHA256 Hash Calculator
+# Generic Hash Calculator (hashgen)
 
-A lightweight command-line utility that calculates SHA256 hashes from standard input.
+A lightweight command-line utility that calculates cryptographic hashes using multiple algorithms from standard input.
 
 ## Overview
 
-This utility implements the SHA-256 cryptographic hash function as specified in FIPS 180-4. It reads data from standard input and outputs the resulting SHA256 hash in hexadecimal format to standard output.
+This utility implements multiple cryptographic hash functions with a unified interface. It reads data from standard input and outputs the resulting hash in hexadecimal format to standard output. The program supports MD5, SHA-1, and SHA-256 algorithms with a common streaming architecture.
 
 ## Features
 
+- **Multiple Hash Algorithms**: MD5, SHA-1, SHA-256 with unified interface
 - **Stream Processing**: Efficiently processes large files using a 32KB internal buffer
-- **Standard Compliance**: Implements SHA-256 according to FIPS 180-4 specification
+- **Standard Compliance**: Implements algorithms according to FIPS 180-4 and RFC 1321
 - **Memory Efficient**: Uses minimal memory regardless of input size
+- **Security Hardened**: Includes overflow protection and secure memory handling
 - **Cross-Platform**: Written in standard C++14 with no external dependencies
+
+## Supported Algorithms
+
+| Algorithm | Output Size | Standard | Description |
+|-----------|-------------|----------|-------------|
+| MD5       | 128 bits (32 hex chars) | RFC 1321 | MD5 Message-Digest Algorithm |
+| SHA1      | 160 bits (40 hex chars) | FIPS 180-4 | Secure Hash Algorithm 1 |
+| SHA256    | 256 bits (64 hex chars) | FIPS 180-4 | Secure Hash Algorithm 256 |
+| SHA128    | 160 bits (40 hex chars) | - | Alias for SHA-1 |
 
 ## Building
 
@@ -25,7 +36,7 @@ This utility implements the SHA-256 cryptographic hash function as specified in 
 
 ```bash
 # Install dependencies (optional, for tests)
-brew install googletest
+brew install googletest cmake
 
 # Clone and build
 git clone <repository-url>
@@ -52,52 +63,83 @@ make test
 
 ## Usage
 
-### Basic Usage
+### Command Line Options
 
 ```bash
-# Calculate hash of a file
-./sha256sum < input.txt
-
-# Calculate hash of a string
-echo -n "hello world" | ./sha256sum
-
-# Calculate hash of output from another command
-ls -la | ./sha256sum
+hashgen --algorithm=<ALGORITHM>
+hashgen -a <ALGORITHM>
+hashgen --help
+hashgen --list
 ```
+
+**Options:**
+- `--algorithm=<type>` : Specify hash algorithm (required)
+- `-a <type>` : Short form of --algorithm
+- `--help, -h` : Show help message
+- `--list` : List supported algorithms
 
 ### Examples
 
 ```bash
-# Hash an empty string
-echo -n "" | ./sha256sum
-# Output: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+# Calculate SHA256 hash of a file
+hashgen --algorithm=sha256 < input.txt
 
-# Hash the string "abc"
-echo -n "abc" | ./sha256sum
-# Output: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+# Calculate MD5 hash of a string
+echo -n "hello world" | hashgen -a md5
 
-# Hash a file
-./sha256sum < /path/to/file.txt
+# Calculate SHA-1 hash of command output
+ls -la | hashgen --algorithm=sha1
 
-# Compare with system shasum (if available)
-echo -n "test" | ./sha256sum
-echo -n "test" | shasum -a 256
+# List supported algorithms
+hashgen --list
+
+# Get help
+hashgen --help
 ```
 
-## Algorithm Details
+### Known Test Vectors
 
-This implementation follows the SHA-256 specification from FIPS 180-4:
+```bash
+# Empty string hashes
+echo -n "" | hashgen -a md5      # d41d8cd98f00b204e9800998ecf8427e
+echo -n "" | hashgen -a sha1     # da39a3ee5e6b4b0d3255bfef95601890afd80709
+echo -n "" | hashgen -a sha256   # e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
-1. **Preprocessing**: Input is padded to a multiple of 512 bits
-2. **Block Processing**: Data is processed in 512-bit (64-byte) blocks
-3. **Hash Computation**: Uses 8 working variables and 64 rounds per block
-4. **Output**: 256-bit hash displayed as 64 hexadecimal characters
+# "abc" hashes
+echo -n "abc" | hashgen -a md5    # 900150983cd24fb0d6963f7d28e17f72
+echo -n "abc" | hashgen -a sha1   # a9993e364706816aba3e25717850c26c9cd0d89d
+echo -n "abc" | hashgen -a sha256 # ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+```
+
+## Architecture
+
+### Design Principles
+
+The implementation follows object-oriented design principles with:
+
+- **Abstract Base Class**: `HashInterface` defines common interface
+- **Stream Processor**: `StreamProcessor` handles I/O operations  
+- **Concrete Implementations**: Algorithm-specific classes (SHA256, SHA1, MD5)
+- **Factory Pattern**: `HashFactory` creates algorithm instances
+- **Security First**: Bounds checking and secure memory handling throughout
+
+### Class Hierarchy
+
+```
+HashInterface (abstract)
+├── SHA256
+├── SHA1  
+└── MD5
+
+StreamProcessor (composition with HashInterface)
+HashFactory (static factory methods)
+```
 
 ### Memory Usage
 
-- Maximum internal buffer: 32KB for streaming large inputs
-- Working memory: ~1KB for algorithm state
-- Total memory footprint: <50KB regardless of input size
+- **Maximum internal buffer**: 32KB for streaming large inputs
+- **Working memory per algorithm**: ~1-2KB for algorithm state
+- **Total memory footprint**: <100KB regardless of input size
 
 ## Testing
 
@@ -108,18 +150,32 @@ The project includes comprehensive unit tests using Google Test:
 make test
 
 # Run tests with verbose output
-./sha256_tests --gtest_verbose
+./hash_tests --gtest_verbose
 ```
 
 ### Test Coverage
 
-- Empty input
-- Single characters
-- Standard test vectors from FIPS 180-4
-- Large inputs (>1MB)
-- Binary data
-- Reset functionality
-- Stream processing with various buffer boundaries
+- **Factory Pattern**: Algorithm creation and validation
+- **Empty inputs**: All algorithms with empty string
+- **Standard test vectors**: Known hash values from specifications
+- **Large inputs**: >32KB streaming test
+- **Binary data**: All byte values (0-255)
+- **Error handling**: Invalid algorithms, edge cases
+- **Reset functionality**: Hasher reuse validation
+
+## Performance
+
+- **Throughput**: Typically 100-500 MB/s depending on hardware and algorithm
+- **Memory**: Constant O(1) memory usage regardless of input size
+- **Streaming**: Processes arbitrarily large files without loading into memory
+
+### Algorithm Performance
+
+| Algorithm | Relative Speed | Security Level |
+|-----------|----------------|----------------|
+| MD5       | Fastest        | Deprecated (cryptographically broken) |
+| SHA-1     | Fast           | Deprecated (theoretical attacks exist) |
+| SHA-256   | Moderate       | Secure (recommended) |
 
 ## Installation
 
@@ -128,15 +184,9 @@ make test
 make install
 
 # This installs:
-# - Binary: /usr/local/bin/sha256sum
-# - Man page: /usr/local/share/man/man1/sha256sum.1
+# - Binary: /usr/local/bin/hashgen
+# - Man page: /usr/local/share/man/man1/hashgen.1
 ```
-
-## Performance
-
-- **Throughput**: Typically 100-500 MB/s depending on hardware
-- **Memory**: Constant O(1) memory usage regardless of input size
-- **Streaming**: Processes arbitrarily large files without loading into memory
 
 ## Compatibility
 
@@ -145,29 +195,52 @@ make install
 - **Dependencies**: None (standard library only)
 - **Testing**: Google Test framework (optional)
 
+## Security Considerations
+
+### Implemented Protections
+
+- **Buffer overflow protection**: Bounds checking on all buffer operations
+- **Integer overflow detection**: Prevents silent wraparound in length calculations
+- **Memory initialization**: Prevents information leakage through uninitialized memory
+- **Secure memory clearing**: Sensitive data is cleared after use
+- **Input validation**: Proper error handling for invalid inputs
+
+### Algorithm Security Status
+
+- **MD5**: ⚠️ **DEPRECATED** - Cryptographically broken, use only for non-security applications
+- **SHA-1**: ⚠️ **DEPRECATED** - Theoretical attacks exist, avoid for new applications  
+- **SHA-256**: ✅ **SECURE** - Currently recommended for cryptographic use
+
 ## Technical Implementation
 
 ### Core Components
 
-- `SHA256` class: Main hash calculator
-- Stream processing: Reads input in chunks
-- Block processing: Implements SHA-256 compression function
-- Padding: Adds required padding per FIPS 180-4
+- **HashInterface**: Abstract base defining common hash operations
+- **StreamProcessor**: Unified streaming I/O handler
+- **Algorithm Classes**: Concrete implementations for each hash function
+- **HashFactory**: Factory for creating algorithm instances
 
 ### Key Features
 
-- **Const-correctness**: All methods properly marked const where applicable
-- **RAII**: Automatic resource management
-- **Exception Safety**: Basic exception safety guarantees
+- **RAII**: Automatic resource management with smart pointers
+- **Exception Safety**: Comprehensive error handling
 - **Standard Compliance**: Follows C++ best practices
+- **Const-correctness**: Proper const method marking
+
+## Future Enhancements
+
+Planned additions include:
+- SHA-512 implementation
+- BLAKE2b and BLAKE2s support  
+- HMAC variants
+- Multi-threading support for large files
 
 ## Verification
 
-Test vectors from FIPS 180-4 and other standards are included in the unit tests to verify correctness:
-
-- Empty string: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-- "abc": `ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad`
-- "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq": `248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1`
+Test vectors from official standards are included in the unit tests to verify correctness against:
+- FIPS 180-4 (SHA algorithms)
+- RFC 1321 (MD5)
+- Known test vector databases
 
 ## License
 

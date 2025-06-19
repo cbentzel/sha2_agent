@@ -38,42 +38,20 @@ void SHA256::reset() {
     std::memset(buffer, 0, sizeof(buffer));
 }
 
-void SHA256::processStream(std::istream& input) {
+void SHA256::update(const uint8_t* data, size_t length) {
     if (finalized) {
-        throw std::runtime_error("Cannot process stream after finalization. Call reset() first.");
+        throw std::runtime_error("Cannot update after finalization. Call reset() first.");
     }
     
-    const size_t CHUNK_SIZE = 32768; // 32KB buffer
-    char chunk[CHUNK_SIZE];
-    
-    // Initialize buffer to prevent information leakage
-    std::memset(chunk, 0, CHUNK_SIZE);
-    
-    while (input.good()) {
-        input.read(chunk, CHUNK_SIZE);
-        std::streamsize bytesRead = input.gcount();
+    for (size_t i = 0; i < length; ++i) {
+        buffer[bufferLength++] = data[i];
+        totalLength++;
         
-        if (bytesRead > 0) {
-            const uint8_t* data = reinterpret_cast<const uint8_t*>(chunk);
-            
-            for (std::streamsize i = 0; i < bytesRead; ++i) {
-                buffer[bufferLength++] = data[i];
-                totalLength++;
-                
-                if (bufferLength == 64) {
-                    processBlock(buffer);
-                    bufferLength = 0;
-                }
-            }
-        }
-        
-        // Clear the buffer after each read to prevent data leakage
-        if (bytesRead < static_cast<std::streamsize>(CHUNK_SIZE)) {
-            std::memset(chunk + bytesRead, 0, CHUNK_SIZE - static_cast<size_t>(bytesRead));
+        if (bufferLength == 64) {
+            processBlock(buffer);
+            bufferLength = 0;
         }
     }
-    
-    finalize();
 }
 
 void SHA256::processBlock(const uint8_t* block) {

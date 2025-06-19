@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Build script for SHA256 Hash Calculator
+# Build script for Generic Hash Calculator
 set -e
 
-echo "Building SHA256 Hash Calculator..."
+echo "Building Generic Hash Calculator (hashgen)..."
 
 # Create build directory
 if [ ! -d "build" ]; then
@@ -22,7 +22,7 @@ make
 
 echo "Build complete!"
 echo ""
-echo "Executable: ./sha256sum"
+echo "Executable: ./hashgen"
 echo ""
 echo "To run tests (requires Google Test):"
 echo "  make test"
@@ -31,4 +31,6 @@ echo "To install system-wide:"
 echo "  sudo make install"
 echo ""
 echo "Example usage:"
-echo "  echo -n 'hello world' | ./sha256sum"
+echo "  echo -n 'hello world' | ./hashgen --algorithm=sha256"
+echo "  ./hashgen --list"
+echo "  ./hashgen --help"

@@ -1,22 +1,23 @@
 #ifndef SHA256_H
 #define SHA256_H
 
+#include "hash_interface.h"
 #include <cstdint>
 #include <string>
-#include <iostream>
 
-class SHA256 {
+class SHA256 : public HashInterface {
 public:
     SHA256();
     
-    // Process data from input stream
-    void processStream(std::istream& input);
-    
-    // Get the final hash as a hexadecimal string
-    std::string getHash() const;
-    
-    // Reset the hasher for reuse
-    void reset();
+    // HashInterface implementation
+    void reset() override;
+    void update(const uint8_t* data, size_t length) override;
+    void finalize() override;
+    std::string getHash() const override;
+    size_t getBlockSize() const override { return 64; }
+    size_t getHashSize() const override { return 32; }
+    std::string getAlgorithmName() const override { return "SHA256"; }
+    bool isFinalized() const override { return finalized; }
 
 private:
     // SHA256 constants
@@ -31,7 +32,7 @@ private:
     
     // Internal methods
     void processBlock(const uint8_t* block);
-    void finalize();
+    void addPadding();
     uint32_t rightRotate(uint32_t value, unsigned int count) const;
     uint32_t choose(uint32_t x, uint32_t y, uint32_t z) const;
     uint32_t majority(uint32_t x, uint32_t y, uint32_t z) const;
@@ -39,7 +40,6 @@ private:
     uint32_t sigma1(uint32_t x) const;
     uint32_t bigSigma0(uint32_t x) const;
     uint32_t bigSigma1(uint32_t x) const;
-    void addPadding();
 };
 
 #endif // SHA256_H

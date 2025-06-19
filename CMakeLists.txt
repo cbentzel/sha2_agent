@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(sha256_hasher VERSION 1.0.0 LANGUAGES CXX)
+project(hashgen VERSION 1.0.0 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 14)
@@ -13,14 +13,22 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -O2")
 include_directories(src)
 
 # Main executable
-add_executable(sha256sum
+add_executable(hashgen
     src/main.cpp
+    src/stream_processor.cpp
     src/sha256.cpp
+    src/sha1.cpp
+    src/md5.cpp
+    src/hash_factory.cpp
 )
 
 # Create a library for testing
-add_library(sha256_lib STATIC
+add_library(hash_lib STATIC
+    src/stream_processor.cpp
     src/sha256.cpp
+    src/sha1.cpp
+    src/md5.cpp
+    src/hash_factory.cpp
 )
 
 # Enable testing
@@ -31,26 +39,26 @@ find_package(GTest QUIET)
 
 if(GTest_FOUND)
     # Test executable
-    add_executable(sha256_tests
-        tests/test_sha256.cpp
+    add_executable(hash_tests
+        tests/test_hash.cpp
     )
     
-    target_link_libraries(sha256_tests
-        sha256_lib
+    target_link_libraries(hash_tests
+        hash_lib
         GTest::GTest
         GTest::Main
     )
     
     # Add test to CTest
-    add_test(NAME SHA256Tests COMMAND sha256_tests)
+    add_test(NAME HashTests COMMAND hash_tests)
     
     # Enable verbose test output
-    set_property(TEST SHA256Tests PROPERTY ENVIRONMENT "GTEST_OUTPUT=xml")
+    set_property(TEST HashTests PROPERTY ENVIRONMENT "GTEST_OUTPUT=xml")
 else()
     message(STATUS "Google Test not found. Tests will not be built.")
     message(STATUS "To install Google Test on macOS: brew install googletest")
 endif()
 
 # Install targets
-install(TARGETS sha256sum DESTINATION bin)
-install(FILES docs/sha256sum.1 DESTINATION share/man/man1)
+install(TARGETS hashgen DESTINATION bin)
+install(FILES docs/hashgen.1 DESTINATION share/man/man1)
