@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <sstream>
 #include <cstring>
+#include <stdexcept>
+#include <limits>
 
 // SHA256 constants as defined in FIPS 180-4
 const uint32_t SHA256::K[64] = {
@@ -32,12 +34,20 @@ void SHA256::reset() {
     
     bufferLength = 0;
     totalLength = 0;
+    finalized = false;
     std::memset(buffer, 0, sizeof(buffer));
 }
 
 void SHA256::processStream(std::istream& input) {
+    if (finalized) {
+        throw std::runtime_error("Cannot process stream after finalization. Call reset() first.");
+    }
+    
     const size_t CHUNK_SIZE = 32768; // 32KB buffer
     char chunk[CHUNK_SIZE];
+    
+    // Initialize buffer to prevent information leakage
+    std::memset(chunk, 0, CHUNK_SIZE);
     
     while (input.good()) {
         input.read(chunk, CHUNK_SIZE);
@@ -55,6 +65,11 @@ void SHA256::processStream(std::istream& input) {
                     bufferLength = 0;
                 }
             }
+        }
+        
+        // Clear the buffer after each read to prevent data leakage
+        if (bytesRead < static_cast<std::streamsize>(CHUNK_SIZE)) {
+            std::memset(chunk + bytesRead, 0, CHUNK_SIZE - static_cast<size_t>(bytesRead));
         }
     }
     
@@ -117,14 +132,32 @@ void SHA256::processBlock(const uint8_t* block) {
     state[5] += f;
     state[6] += g;
     state[7] += h;
+    
+    // Clear sensitive data from stack
+    std::memset(w, 0, sizeof(w));
+    a = b = c = d = e = f = g = h = 0;
 }
 
 void SHA256::finalize() {
+    if (finalized) {
+        return; // Already finalized, avoid double processing
+    }
     addPadding();
+    finalized = true;
 }
 
 void SHA256::addPadding() {
+    // Check for potential overflow when converting to bits
+    if (totalLength > UINT64_MAX / 8) {
+        // This should never happen in practice, but handle gracefully
+        throw std::overflow_error("Input too large for SHA256 processing");
+    }
     uint64_t totalBits = totalLength * 8;
+    
+    // Check buffer bounds before writing padding bit
+    if (bufferLength >= 64) {
+        throw std::runtime_error("Buffer overflow detected in addPadding");
+    }
     
     // Add padding bit
     buffer[bufferLength++] = 0x80;
@@ -146,6 +179,9 @@ void SHA256::addPadding() {
     
     // Append length in bits as 64-bit big-endian integer
     for (int i = 7; i >= 0; --i) {
+        if (bufferLength >= 64) {
+            throw std::runtime_error("Buffer overflow detected while appending length");
+        }
         buffer[bufferLength++] = static_cast<uint8_t>(totalBits >> (i * 8));
     }
     
@@ -154,6 +190,10 @@ void SHA256::addPadding() {
 }
 
 std::string SHA256::getHash() const {
+    if (!finalized) {
+        throw std::runtime_error("Cannot get hash before finalization. Call processStream() first.");
+    }
+    
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
     
@@ -165,6 +205,8 @@ std::string SHA256::getHash() const {
 }
 
 uint32_t SHA256::rightRotate(uint32_t value, unsigned int count) const {
+    // Ensure count is within valid range to prevent undefined behavior
+    count &= 31; // Equivalent to count % 32, but faster
     return (value >> count) | (value << (32 - count));
 }
 

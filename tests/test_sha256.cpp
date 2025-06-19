@@ -116,3 +116,37 @@ TEST_F(SHA256Test, LargeDataStreaming) {
     hasher.processStream(input2);
     EXPECT_EQ(hasher.getHash(), hash);
 }
+
+// Test that getHash() throws when called before finalization
+TEST_F(SHA256Test, PrematureHashAccess) {
+    // Don't process any stream, just try to get hash
+    EXPECT_THROW(hasher.getHash(), std::runtime_error);
+}
+
+// Test that processStream() throws when called after finalization
+TEST_F(SHA256Test, DoubleProcessing) {
+    std::istringstream input1("test");
+    hasher.processStream(input1);
+    
+    // This should work
+    std::string hash1 = hasher.getHash();
+    EXPECT_EQ(hash1.length(), 64);
+    
+    // This should throw
+    std::istringstream input2("test2");
+    EXPECT_THROW(hasher.processStream(input2), std::runtime_error);
+}
+
+// Test reset functionality after error states
+TEST_F(SHA256Test, ResetAfterError) {
+    std::istringstream input1("test");
+    hasher.processStream(input1);
+    
+    // Reset should allow reuse
+    hasher.reset();
+    
+    std::istringstream input2("abc");
+    hasher.processStream(input2);
+    
+    EXPECT_EQ(hasher.getHash(), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+}

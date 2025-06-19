@@ -27,6 +27,7 @@ private:
     uint8_t buffer[64];
     size_t bufferLength;
     uint64_t totalLength;
+    bool finalized;
     
     // Internal methods
     void processBlock(const uint8_t* block);
