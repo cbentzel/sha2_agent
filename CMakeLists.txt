@@ -18,6 +18,8 @@ add_executable(hashgen
     src/stream_processor.cpp
     src/sha256.cpp
     src/sha512.cpp
+    src/blake256.cpp
+    src/blake512.cpp
     src/sha1.cpp
     src/md5.cpp
     src/hash_factory.cpp
@@ -28,6 +30,8 @@ add_library(hash_lib STATIC
     src/stream_processor.cpp
     src/sha256.cpp
     src/sha512.cpp
+    src/blake256.cpp
+    src/blake512.cpp
     src/sha1.cpp
     src/md5.cpp
     src/hash_factory.cpp
@@ -96,12 +100,36 @@ if(GTest_FOUND)
         GTest::Main
     )
     
+    # BLAKE256 specific tests
+    add_executable(blake256_tests
+        tests/test_blake256.cpp
+    )
+    
+    target_link_libraries(blake256_tests
+        hash_lib
+        GTest::GTest
+        GTest::Main
+    )
+    
+    # BLAKE512 specific tests
+    add_executable(blake512_tests
+        tests/test_blake512.cpp
+    )
+    
+    target_link_libraries(blake512_tests
+        hash_lib
+        GTest::GTest
+        GTest::Main
+    )
+    
     # Add tests to CTest
     add_test(NAME HashTests COMMAND hash_tests)
     add_test(NAME MD5Tests COMMAND md5_tests)
     add_test(NAME SHA1Tests COMMAND sha1_tests)
     add_test(NAME SHA256Tests COMMAND sha256_tests)
     add_test(NAME SHA512Tests COMMAND sha512_tests)
+    add_test(NAME BLAKE256Tests COMMAND blake256_tests)
+    add_test(NAME BLAKE512Tests COMMAND blake512_tests)
     
     # Enable verbose test output
     set_property(TEST HashTests PROPERTY ENVIRONMENT "GTEST_OUTPUT=xml")

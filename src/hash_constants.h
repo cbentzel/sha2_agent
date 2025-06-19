@@ -14,12 +14,16 @@ namespace HASH_CONSTANTS {
     static constexpr size_t SHA1_HASH_SIZE = 20;    // 160 bits
     static constexpr size_t SHA256_HASH_SIZE = 32;  // 256 bits
     static constexpr size_t SHA512_HASH_SIZE = 64;  // 512 bits
+    static constexpr size_t BLAKE256_HASH_SIZE = 32; // 256 bits
+    static constexpr size_t BLAKE512_HASH_SIZE = 64; // 512 bits
     
     // Algorithm-specific block sizes  
     static constexpr size_t MD5_BLOCK_SIZE = BLOCK_SIZE_512;
     static constexpr size_t SHA1_BLOCK_SIZE = BLOCK_SIZE_512;
     static constexpr size_t SHA256_BLOCK_SIZE = BLOCK_SIZE_512;
     static constexpr size_t SHA512_BLOCK_SIZE = BLOCK_SIZE_1024;
+    static constexpr size_t BLAKE256_BLOCK_SIZE = BLOCK_SIZE_512;
+    static constexpr size_t BLAKE512_BLOCK_SIZE = BLOCK_SIZE_1024;
     
     // Padding constants
     static constexpr uint8_t PADDING_BIT = 0x80;
