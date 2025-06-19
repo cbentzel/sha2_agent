@@ -1,35 +1,29 @@
 #ifndef SHA1_H
 #define SHA1_H
 
-#include "hash_interface.h"
+#include "hash_base.h"
+#include "hash_constants.h"
 #include <cstdint>
 #include <string>
 
-class SHA1 : public HashInterface {
+class SHA1 : public HashBase {
 public:
     SHA1();
     
-    // HashInterface implementation
+    // HashBase implementation
     void reset() override;
-    void update(const uint8_t* data, size_t length) override;
-    void finalize() override;
     std::string getHash() const override;
-    size_t getBlockSize() const override { return 64; }
-    size_t getHashSize() const override { return 20; }
+    size_t getBlockSize() const override { return HASH_CONSTANTS::SHA1_BLOCK_SIZE; }
+    size_t getHashSize() const override { return HASH_CONSTANTS::SHA1_HASH_SIZE; }
     std::string getAlgorithmName() const override { return "SHA1"; }
-    bool isFinalized() const override { return finalized; }
 
 private:
     // SHA1 state
     uint32_t state[5];
-    uint8_t buffer[64];
-    size_t bufferLength;
-    uint64_t totalLength;
-    bool finalized;
     
     // Internal methods
-    void processBlock(const uint8_t* block);
-    void addPadding();
+    void processBlock(const uint8_t* block) override;
+    void addPadding() override;
     uint32_t leftRotate(uint32_t value, unsigned int count) const;
 };
 

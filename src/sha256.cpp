@@ -1,12 +1,13 @@
 #include "sha256.h"
+#include "hash_constants.h"
 #include <iomanip>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
 #include <limits>
 
-// SHA256 constants as defined in FIPS 180-4
-const uint32_t SHA256::K[64] = {
+// SHA256 constants moved to hash_constants.h, using local copy for performance
+const uint32_t K[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
     0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -17,12 +18,14 @@ const uint32_t SHA256::K[64] = {
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-SHA256::SHA256() {
+SHA256::SHA256() : HashBase(HASH_CONSTANTS::SHA256_BLOCK_SIZE) {
     reset();
 }
 
 void SHA256::reset() {
-    // Initial hash values (FIPS 180-4)
+    resetBase(); // Reset base class state
+    
+    // Initialize SHA256-specific state values (FIPS 180-4)
     state[0] = 0x6a09e667;
     state[1] = 0xbb67ae85;
     state[2] = 0x3c6ef372;
@@ -31,27 +34,6 @@ void SHA256::reset() {
     state[5] = 0x9b05688c;
     state[6] = 0x1f83d9ab;
     state[7] = 0x5be0cd19;
-    
-    bufferLength = 0;
-    totalLength = 0;
-    finalized = false;
-    std::memset(buffer, 0, sizeof(buffer));
-}
-
-void SHA256::update(const uint8_t* data, size_t length) {
-    if (finalized) {
-        throw std::runtime_error("Cannot update after finalization. Call reset() first.");
-    }
-    
-    for (size_t i = 0; i < length; ++i) {
-        buffer[bufferLength++] = data[i];
-        totalLength++;
-        
-        if (bufferLength == 64) {
-            processBlock(buffer);
-            bufferLength = 0;
-        }
-    }
 }
 
 void SHA256::processBlock(const uint8_t* block) {
@@ -116,24 +98,15 @@ void SHA256::processBlock(const uint8_t* block) {
     a = b = c = d = e = f = g = h = 0;
 }
 
-void SHA256::finalize() {
-    if (finalized) {
-        return; // Already finalized, avoid double processing
-    }
-    addPadding();
-    finalized = true;
-}
-
 void SHA256::addPadding() {
-    // Check for potential overflow when converting to bits
+    // Check for potential overflow when converting to bits  
     if (totalLength > UINT64_MAX / 8) {
-        // This should never happen in practice, but handle gracefully
         throw std::overflow_error("Input too large for SHA256 processing");
     }
     uint64_t totalBits = totalLength * 8;
     
     // Check buffer bounds before writing padding bit
-    if (bufferLength >= 64) {
+    if (bufferLength >= blockSize) {
         throw std::runtime_error("Buffer overflow detected in addPadding");
     }
     
@@ -143,7 +116,7 @@ void SHA256::addPadding() {
     // Add zeros until we have 56 bytes in the buffer (8 bytes left for length)
     if (bufferLength > 56) {
         // Fill the rest of this block with zeros and process it
-        while (bufferLength < 64) {
+        while (bufferLength < blockSize) {
             buffer[bufferLength++] = 0x00;
         }
         processBlock(buffer);
@@ -157,7 +130,7 @@ void SHA256::addPadding() {
     
     // Append length in bits as 64-bit big-endian integer
     for (int i = 7; i >= 0; --i) {
-        if (bufferLength >= 64) {
+        if (bufferLength >= blockSize) {
             throw std::runtime_error("Buffer overflow detected while appending length");
         }
         buffer[bufferLength++] = static_cast<uint8_t>(totalBits >> (i * 8));

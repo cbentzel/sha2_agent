@@ -1,49 +1,24 @@
 #include "sha1.h"
+#include "hash_constants.h"
 #include <iomanip>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <limits>
 
-SHA1::SHA1() {
+SHA1::SHA1() : HashBase(HASH_CONSTANTS::SHA1_BLOCK_SIZE) {
     reset();
 }
 
 void SHA1::reset() {
+    resetBase(); // Reset base class state
+    
     // SHA1 initial hash values
     state[0] = 0x67452301;
     state[1] = 0xefcdab89;
     state[2] = 0x98badcfe;
     state[3] = 0x10325476;
     state[4] = 0xc3d2e1f0;
-    
-    bufferLength = 0;
-    totalLength = 0;
-    finalized = false;
-    std::memset(buffer, 0, sizeof(buffer));
-}
-
-void SHA1::update(const uint8_t* data, size_t length) {
-    if (finalized) {
-        throw std::runtime_error("Cannot update after finalization. Call reset() first.");
-    }
-    
-    for (size_t i = 0; i < length; ++i) {
-        buffer[bufferLength++] = data[i];
-        totalLength++;
-        
-        if (bufferLength == 64) {
-            processBlock(buffer);
-            bufferLength = 0;
-        }
-    }
-}
-
-void SHA1::finalize() {
-    if (finalized) {
-        return; // Already finalized
-    }
-    addPadding();
-    finalized = true;
 }
 
 void SHA1::processBlock(const uint8_t* block) {
@@ -110,7 +85,7 @@ void SHA1::addPadding() {
     uint64_t totalBits = totalLength * 8;
     
     // Check buffer bounds
-    if (bufferLength >= 64) {
+    if (bufferLength >= blockSize) {
         throw std::runtime_error("Buffer overflow detected in addPadding");
     }
     
@@ -119,7 +94,7 @@ void SHA1::addPadding() {
     
     // Add zeros until we have 56 bytes (8 bytes left for length)
     if (bufferLength > 56) {
-        while (bufferLength < 64) {
+        while (bufferLength < blockSize) {
             buffer[bufferLength++] = 0x00;
         }
         processBlock(buffer);
@@ -132,7 +107,7 @@ void SHA1::addPadding() {
     
     // Append length in bits as 64-bit big-endian integer
     for (int i = 7; i >= 0; --i) {
-        if (bufferLength >= 64) {
+        if (bufferLength >= blockSize) {
             throw std::runtime_error("Buffer overflow detected while appending length");
         }
         buffer[bufferLength++] = static_cast<uint8_t>(totalBits >> (i * 8));

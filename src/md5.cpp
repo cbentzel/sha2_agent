@@ -1,8 +1,10 @@
 #include "md5.h"
+#include "hash_constants.h"
 #include <iomanip>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <limits>
 
 // MD5 round constants
 static const uint32_t T[64] = {
@@ -16,45 +18,18 @@ static const uint32_t T[64] = {
     0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
 };
 
-MD5::MD5() {
+MD5::MD5() : HashBase(HASH_CONSTANTS::MD5_BLOCK_SIZE) {
     reset();
 }
 
 void MD5::reset() {
+    resetBase(); // Reset base class state
+    
     // MD5 initial hash values
     state[0] = 0x67452301;
     state[1] = 0xefcdab89;
     state[2] = 0x98badcfe;
     state[3] = 0x10325476;
-    
-    bufferLength = 0;
-    totalLength = 0;
-    finalized = false;
-    std::memset(buffer, 0, sizeof(buffer));
-}
-
-void MD5::update(const uint8_t* data, size_t length) {
-    if (finalized) {
-        throw std::runtime_error("Cannot update after finalization. Call reset() first.");
-    }
-    
-    for (size_t i = 0; i < length; ++i) {
-        buffer[bufferLength++] = data[i];
-        totalLength++;
-        
-        if (bufferLength == 64) {
-            processBlock(buffer);
-            bufferLength = 0;
-        }
-    }
-}
-
-void MD5::finalize() {
-    if (finalized) {
-        return; // Already finalized
-    }
-    addPadding();
-    finalized = true;
 }
 
 void MD5::processBlock(const uint8_t* block) {
@@ -124,7 +99,7 @@ void MD5::addPadding() {
     uint64_t totalBits = totalLength * 8;
     
     // Check buffer bounds
-    if (bufferLength >= 64) {
+    if (bufferLength >= blockSize) {
         throw std::runtime_error("Buffer overflow detected in addPadding");
     }
     
@@ -133,7 +108,7 @@ void MD5::addPadding() {
     
     // Add zeros until we have 56 bytes (8 bytes left for length)
     if (bufferLength > 56) {
-        while (bufferLength < 64) {
+        while (bufferLength < blockSize) {
             buffer[bufferLength++] = 0x00;
         }
         processBlock(buffer);
@@ -146,7 +121,7 @@ void MD5::addPadding() {
     
     // Append length in bits as 64-bit little-endian integer
     for (int i = 0; i < 8; ++i) {
-        if (bufferLength >= 64) {
+        if (bufferLength >= blockSize) {
             throw std::runtime_error("Buffer overflow detected while appending length");
         }
         buffer[bufferLength++] = static_cast<uint8_t>(totalBits >> (i * 8));
